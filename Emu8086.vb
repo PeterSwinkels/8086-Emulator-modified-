@@ -1,4 +1,6 @@
-﻿'This module's imports and settings.
+﻿#Const VERBOSE = False
+
+'This module's imports and settings.
 '
 'Note:
 'A call needs to be added to the CheckForHardwareInterrupt procedure in the CPU class.
@@ -33,9 +35,11 @@ Public Module Emu8086Module
 
             For Number As Integer = &H0% To Interrupts.Length - &H1%
                If Not Interrupts(Number) = &H0% Then
+#If VERBOSE Then
                   SyncLock Synchronizer
                      CPUEvent.Append($"HW INT {Number:X}{NewLine}")
                   End SyncLock
+#End If
 
                   CPU.ExecuteInterrupt(CPU8086Class.OpcodesE.INT, Number)
                End If
@@ -75,9 +79,11 @@ Public Module Emu8086Module
             FileO.Read(Values, 0, Values.Length)
          End Using
 
+#If VERBOSE Then
          SyncLock Synchronizer
             CPUEvent.Append($"I/O: IN {Port:X}, {Values(Port):X}{NewLine}")
          End SyncLock
+#End If
 
          Return Values(Port)
       Catch ExceptionO As Exception
@@ -111,12 +117,14 @@ Public Module Emu8086Module
             FileO.Write(Values, 0, Values.Length)
          End Using
 
+#If VERBOSE Then
          SyncLock Synchronizer
             CPUEvent.Append($"I/O: OUT {Port:X}, {Values(Port):X}{NewLine}")
             If Value > &HFF% Then
                CPUEvent.Append($"I/O: OUT {Port + &H1%:X}, {Values(Port + &H1%):X}{NewLine}")
             End If
          End SyncLock
+#End If
 
          Return True
       Catch ExceptionO As Exception
