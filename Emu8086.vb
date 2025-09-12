@@ -5,6 +5,7 @@
 'Note:
 'A call needs to be added to the CheckForHardwareInterrupt procedure in the CPU class.
 'A call needs to be added to the DisplayEmu8086Information procedure in this program's start up procedure.
+'Modify the ReadIOPort and WriteIOPort calls in the core module to include the Is8Bit parameter.
 
 Option Compare Binary
 Option Explicit On
@@ -69,7 +70,7 @@ Public Module Emu8086Module
    End Sub
 
    'This procedure attempts to read from the specified I/O port and returns the result.
-   Public Function ReadIOPort(Port As Integer) As Integer?
+   Public Function ReadIOPort(Port As Integer, Is8Bit As Boolean) As Integer?
       Try
          Dim Values() As Byte = {}
 
@@ -85,7 +86,7 @@ Public Module Emu8086Module
          End SyncLock
 #End If
 
-         Return Values(Port)
+         Return If(Is8Bit, Values(Port), (Values(Port) << &H8%) Or Values(Port + &H1%))
       Catch ExceptionO As Exception
          SyncLock Synchronizer
             CPUEvent.Append($"{ExceptionO.Message}{NewLine}")
@@ -96,7 +97,7 @@ Public Module Emu8086Module
    End Function
 
    'This procedure attempts to write the specified I/O port and returns whether or not it succeeded.
-   Public Function WriteIOPort(Port As Integer, Value As Integer) As Boolean
+   Public Function WriteIOPort(Port As Integer, Value As Integer, Is8Bit As Boolean) As Boolean
       Try
          Dim Values() As Byte = {}
 
@@ -108,7 +109,7 @@ Public Module Emu8086Module
 
          If Port >= Values.Length Then ReDim Preserve Values(0 To Port)
          Values(Port) = CByte(Value And &HFF%)
-         If Value > &HFF% Then
+         If Not Is8Bit Then
             If Port + &H1% >= Values.Length Then ReDim Preserve Values(0 To Port + &H1%)
             Values(Port + &H1%) = CByte(Value >> &H8%)
          End If
