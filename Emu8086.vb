@@ -82,11 +82,11 @@ Public Module Emu8086Module
 
 #If VERBOSE Then
          SyncLock Synchronizer
-            CPUEvent.Append($"I/O: IN {Port:X}, {Values(Port):X}{NewLine}")
+            CPUEvent.Append($"I/O: IN {Port:X}, {If(Is8Bit, Values(Port), (CInt(Values(Port)) << &H8%) Or Values(Port + &H1%)):X}{NewLine}")
          End SyncLock
 #End If
 
-         Return If(Is8Bit, Values(Port), (Values(Port) << &H8%) Or Values(Port + &H1%))
+         Return If(Is8Bit, Values(Port), (CInt(Values(Port)) << &H8%) Or Values(Port + &H1%))
       Catch ExceptionO As Exception
          SyncLock Synchronizer
             CPUEvent.Append($"{ExceptionO.Message}{NewLine}")
@@ -108,9 +108,11 @@ Public Module Emu8086Module
          End Using
 
          If Port >= Values.Length Then ReDim Preserve Values(0 To Port)
-         Values(Port) = CByte(Value And &HFF%)
-         If Not Is8Bit Then
+         If Is8Bit Then
+            Values(Port) = CByte(Value And &HFF%)
+         Else
             If Port + &H1% >= Values.Length Then ReDim Preserve Values(0 To Port + &H1%)
+            Values(Port) = CByte(Value And &HFF%)
             Values(Port + &H1%) = CByte(Value >> &H8%)
          End If
 
@@ -120,10 +122,7 @@ Public Module Emu8086Module
 
 #If VERBOSE Then
          SyncLock Synchronizer
-            CPUEvent.Append($"I/O: OUT {Port:X}, {Values(Port):X}{NewLine}")
-            If Value > &HFF% Then
-               CPUEvent.Append($"I/O: OUT {Port + &H1%:X}, {Values(Port + &H1%):X}{NewLine}")
-            End If
+            CPUEvent.Append($"I/O: OUT {Port:X}, {If(Is8Bit, Values(Port), (CInt(Values(Port)) << &H8%) Or Values(Port + &H1%)):X}{NewLine}")
          End SyncLock
 #End If
 
